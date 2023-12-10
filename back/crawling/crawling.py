@@ -147,3 +147,5 @@ for room in rooms:
 connection.commit()
 cursor.close()
 connection.close()
+
+
