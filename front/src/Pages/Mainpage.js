@@ -1,38 +1,118 @@
-import React, { useRef, useEffect, useState} from "react";
-
+import React, { useEffect, useState } from "react";
+import axios from 'axios';
+import SidebarItem from "../\bComponent/SidebarItem";
+import ItemDetail from "../\bComponent/ItemDetail";
 function Mainpage() {
-  const containerRef = useRef(null); // useRef를 사용하여 참조 생성
-  const [map, setMap] = useState(null);
-  const options = {
-    center: new window.kakao.maps.LatLng(33.450701, 126.570667),
-    level: 3,
-  };
-  useEffect(() => {
-    const mapContainer = containerRef.current; // useRef로 생성한 참조를 사용
-    const newMap = new window.kakao.maps.Map(mapContainer, options);
-    setMap(newMap);
-    return () => {
-      // 언마운트 시 정리 작업이 필요한 경우 추가
+    const [map, setMap] = useState(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const mapOption = {
+        center: new window.kakao.maps.LatLng(37.300349, 126.97075),
+        level: 3,
     };
-  }, []); // 두번째 인자가 빈 배열이므로 컴포넌트가 마운트될 때만 실행
-  useEffect(() => {
-    const handleResize = () => {
-        if(map){
-            map.relayout();
-        }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-        window.removeEventListener("resize", handleResize);
-    }
-  },[map]);
+    const markerImage = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"; 
+    const imageSize = new window.kakao.maps.Size(24, 35); 
+    const [markers, setMarkers] = useState([]);
+    const [itemDetails, setItemDetails] = useState([]);
+    var cluster = new window.kakao.maps.MarkerClusterer({
+        map: map,
+        minLevel: 3,
+        averageCenter: true, // 필요에 따라 설정
+        disableClickZoom : true
+    });
 
-  return (
-    <div className="main-wrapper">
-        <div className="map" ref={containerRef}></div>
-    </div>
-    
-  );
+    useEffect(() => {
+        const mapContainer = document.getElementsByClassName('map')[0];
+        console.log("width");
+        console.log(mapContainer.style.width);
+        const newMap = new window.kakao.maps.Map(mapContainer, mapOption);
+        setMap(newMap);
+
+        axios.get('http://localhost:3030')
+            .then(response => {
+                const locations = response.data;
+                console.log(locations)
+                setMarkers(locations);
+            })
+            .catch(error => {
+                console.error('Error fetching location data');
+            });
+        
+        // 컴포넌트 언마운트 시 지도 리소스 정리
+        return () => {
+        };
+    }, []);
+
+    useEffect(() => {
+        // 마커를 추가하는 부분
+        if (map && markers.length > 0) {
+            var markerList = markers.map(location => {
+                const marker = new window.kakao.maps.Marker({
+                    map: map,
+                    position: new window.kakao.maps.LatLng(location.lat, location.lng),
+                    title: location.itemId,
+                    image: new window.kakao.maps.MarkerImage(markerImage, imageSize),
+                });
+                marker.itemId = location.itemId;
+                return marker
+            });
+            
+            cluster.addMarkers(markerList);
+        }
+    }, [map, markers]);
+
+    window.kakao.maps.event.addListener(cluster, 'clusterclick', function(clusterPoint){
+        var makrersInCluster = clusterPoint.getMarkers();
+        var clickedMarkers = []
+        makrersInCluster.forEach(marker =>{
+            clickedMarkers.push(marker.itemId);
+        });
+
+        axios.get('http://localhost:3030/getItemDetails',{params : {itemIds: clickedMarkers}})
+        .then(response => {
+            //console.log(response.data);
+            setItemDetails(response.data);
+            setIsSidebarOpen(true);
+            map.panTo(new window.kakao.maps.LatLng(response.data[0].lat, response.data[0].lng))
+        })
+        .catch(error => {
+            console.error('Error fetching data', error);
+        });
+    });
+
+    const handleItemClick = (selectedItemId) => {
+        const selectedItem = selectedItemId;
+        setSelectedItem(selectedItem);
+        console.log(selectedItem);
+    };
+    return (
+        <div className="main-wrapper">
+            <div className="map"></div>
+            {isSidebarOpen && (
+            <div className="sidebar">
+                {selectedItem ? (
+                        <div>
+                            <h2>Selected Item Details</h2>
+                            <ItemDetail selectedItemId={selectedItem} />
+                        </div>
+                    ) : (
+                        // Render the list of items
+                        <div>
+                            <h2>SKKU ROOM LIST</h2>
+                            {itemDetails.map(detail => (
+                                <SidebarItem
+                                    key={detail.itemId}
+                                    item={detail}
+                                    onClick={() => handleItemClick(detail.itemId)} // Handle item click
+                                />
+                            ))}
+                        </div>
+                    )}
+            </div>
+            )
+                }
+        </div>
+    );
 }
 
 export default Mainpage;

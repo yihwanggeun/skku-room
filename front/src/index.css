@@ -1,13 +1,79 @@
+html{
+    font-family:Arial, Helvetica, sans-serif
+}
 body, html {
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 .main-wrapper{
+    display: flex;
+    flex-direction: row;
     width : 100vw;
     height : 100vh;
 }
 .map{
-    width: 100%;
+    flex: 1;
     height: 100%;
     background-color: aquamarine;
+}
+
+.sidebar{
+    width: 400px;
+    height: 100%;
+    background-color:aliceblue
+}
+.sidebar h2{
+    margin-top: 16px;
+    text-align: center;
+    background-color: antiquewhite;
+    margin-bottom: 0;
+    font-size: 30px;
+}
+
+.sidebar-item-wrapper{
+    display: flex;
+    flex-direction: row;
+    height: 100px;
+    padding: 8px;
+    background-color: wheat;
+}
+
+.left-box{
+    width: 35%;
+}
+
+.left-box img {
+    width: 100%; /* Set the image width to 100% of its container */
+    height: 100%; /* Set the image height to 100% of its container */
+    object-fit: cover; /* Maintain the aspect ratio and cover the box */
+}
+.right-box{
+    width: 65%;
+    margin-left: 8px;
+}
+
+.jibun{
+    margin-top: 2px;
+}
+.title {
+    margin-top: 2px;
+    white-space: nowrap; /* Prevent text from wrapping to the next line */
+    overflow: hidden; /* Hide overflow content */
+    text-overflow: ellipsis; /* Display an ellipsis (...) when text overflows */
+    color: gray;
+}
+
+.roomtype{
+    display: inline-block;
+    background-color: lightgray;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin: 0;
+}
+.price{
+    margin-top: 6px;
+    font-size: 24px;
+    font-weight: 700;
 }
