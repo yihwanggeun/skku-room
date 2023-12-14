@@ -29,7 +29,7 @@ app.set("host", process.env.HOST || "0.0.0.0"); // 아이피 설정
 // 루트 접속시 아이피 출력
 app.get("/", function (req, res) {
 
-    const location_query = "SELECT * FROM location"
+    const location_query = "SELECT l.* FROM location l JOIN item i ON l.itemID = i.itemID WHERE i.share = 0;"
     db.query(location_query, (err, results) => {
         if (err) {
           console.error("Database query error:", err);
@@ -39,6 +39,21 @@ app.get("/", function (req, res) {
         }
       });
 });
+
+
+app.get("/share", function (req, res) {
+
+  const location_query = "SELECT l.* FROM location l JOIN item i ON l.itemID = i.itemID WHERE i.share = 1;"
+  db.query(location_query, (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        res.status(500).send("Internal Server Error");
+      } else {
+        res.send(results);
+      }
+    });
+});
+
 
 // 루트 접속시 아이피 출력
 app.get("/getItemDetails", function (req, res) {

@@ -3,7 +3,7 @@ import React from "react";
 
 const SidebarItem = ({ item, onClick }) => {
         return (
-        <div onClick={() => { onClick(item.itemId); }}>
+        <div onClick={() => { onClick(item.itemId); console.log(item.itemId)}}>
             <div className="sidebar-item-wrapper">
                 <div className="left-box">
                 <img style={ {objectFit : "cover"}} src='https://ic.zigbang.com/ic/items/38743082/1.jpg?w=400&h=300&q=70&a=1' alt="My Image" />

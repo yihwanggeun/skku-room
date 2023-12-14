@@ -2,20 +2,21 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import SidebarItem from "../\bComponent/SidebarItem";
 import ItemDetail from "../\bComponent/ItemDetail";
-function Mainpage() {
-    const [map, setMap] = useState(null);
+
+const ShareRoomPage = () => {
+    const [shareMap, setShareMap] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
     const mapOption = {
         center: new window.kakao.maps.LatLng(37.300349, 126.97075),
         level: 3,
     };
-    const markerImage = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"; 
+    const markerImage = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
     const imageSize = new window.kakao.maps.Size(24, 35); 
     const [markers, setMarkers] = useState([]);
+    const [selectedItem, setSelectedItem] = useState(null);
     const [itemDetails, setItemDetails] = useState([]);
     var cluster = new window.kakao.maps.MarkerClusterer({
-        map: map,
+        map: shareMap,
         minLevel: 3,
         averageCenter: true, // 필요에 따라 설정
         disableClickZoom : true,
@@ -25,19 +26,15 @@ function Mainpage() {
             color: '#FFF',
             textAlign : 'center',
             fontWeight: 'bold',
-            background : 'rgba(43, 102, 83, .8)',
+            background : 'rgba(43, 52, 83, .8)',
             lineHeight: '50px'
         }]
     });
-
     useEffect(() => {
-        const mapContainer = document.getElementsByClassName('map')[0];
-        console.log("width");
-        console.log(mapContainer.style.width);
-        const newMap = new window.kakao.maps.Map(mapContainer, mapOption);
-        setMap(newMap);
-
-        axios.get('http://localhost:3030')
+        const shareMapContainer = document.getElementsByClassName('share-map')[0];
+        const shareMap = new window.kakao.maps.Map(shareMapContainer, mapOption);
+        setShareMap(shareMap);
+        axios.get('http://localhost:3030/share')
             .then(response => {
                 const locations = response.data;
                 console.log(locations)
@@ -52,13 +49,13 @@ function Mainpage() {
             
         };
     }, []);
-
+    
     useEffect(() => {
         // 마커를 추가하는 부분
-        if (map && markers.length > 0) {
+        if (shareMap && markers.length > 0) {
             var markerList = markers.map(location => {
                 const marker = new window.kakao.maps.Marker({
-                    map: map,
+                    map: shareMap,
                     position: new window.kakao.maps.LatLng(location.lat, location.lng),
                     title: location.itemId,
                     image: new window.kakao.maps.MarkerImage(markerImage, imageSize),
@@ -69,7 +66,7 @@ function Mainpage() {
             
             cluster.addMarkers(markerList);
         }
-    }, [map, markers]);
+    }, [shareMap, markers]);
 
     window.kakao.maps.event.addListener(cluster, 'clusterclick', function(clusterPoint){
         var makrersInCluster = clusterPoint.getMarkers();
@@ -80,25 +77,27 @@ function Mainpage() {
 
         axios.get('http://localhost:3030/getItemDetails',{params : {itemIds: clickedMarkers}})
         .then(response => {
-            //console.log(response.data);
+            console.log(response.data);
             setItemDetails(response.data);
             setIsSidebarOpen(true);
-            map.panTo(new window.kakao.maps.LatLng(response.data[0].lat, response.data[0].lng))
+            console.log(isSidebarOpen)
+            shareMap.panTo(new window.kakao.maps.LatLng(response.data[0].lat, response.data[0].lng))
         })
         .catch(error => {
             console.error('Error fetching data', error);
         });
     });
-
     const handleItemClick = (selectedItemId) => {
         const selectedItem = selectedItemId;
         setSelectedItem(selectedItem);
         console.log(selectedItem);
     };
+    useEffect(() => {
+        console.log(isSidebarOpen);
+    }, [isSidebarOpen]);
     return (
-        
         <div className="main-wrapper">
-            <div className="map"></div>
+            <div className="share-map"/>
             {isSidebarOpen && (
             <div className="sidebar">
                 {selectedItem ? (
@@ -124,6 +123,6 @@ function Mainpage() {
                 }
         </div>
     );
-}
+};
 
-export default Mainpage;
+export default ShareRoomPage;

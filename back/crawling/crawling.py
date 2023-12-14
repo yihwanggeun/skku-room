@@ -17,8 +17,13 @@ geohashs = ['wydk1']
 #geohashs = ['wydk3']
 
 for geohash in geohashs:
+#     url = f"https://apis.zigbang.com/v2/items/\
+# oneroom?geohash={geohash}&\
+# depositMin=0&rentMin=0&\
+# salesTypes[0]=전세&salesTypes[1]=월세&\
+# domain=zigbang&checkAnyItemWithoutFilter=true"
     url = f"https://apis.zigbang.com/v2/items/\
-oneroom?geohash={geohash}&\
+villa?geohash={geohash}&\
 depositMin=0&rentMin=0&\
 salesTypes[0]=전세&salesTypes[1]=월세&\
 domain=zigbang&checkAnyItemWithoutFilter=true"
@@ -26,16 +31,20 @@ domain=zigbang&checkAnyItemWithoutFilter=true"
     data = response.json()["items"]
     for item in data:
         itemIds.append({'itemId' : item["itemId"]})
+count = 0
 for item in itemIds:
     detailurl = f"https://apis.zigbang.com/v3/items/{item['itemId']}?version=&domain=zigbang"
     response = requests.get(detailurl)
     data = response.json()["item"]
     rooms.append(data)
+    count += 1
+    if count == 20:
+        break
 
 for room in rooms:
     insert_query = item_query = """
-    INSERT INTO item (itemId, salesType, serviceType, imageThumbnail, description, updatedAt, bathroomCount, residenceType, jibunAddress)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT IGNORE INTO item (itemId, salesType, serviceType, imageThumbnail, description, updatedAt, bathroomCount, residenceType, jibunAddress, share)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     item_data = (
@@ -47,14 +56,14 @@ for room in rooms:
         room['updatedAt'],
         room['bathroomCount'],
         room['residenceType'],
-        room.get('jibunAddress', "")  # Use get to provide a default value if the key is not present
-    
+        room.get('jibunAddress', ""),  # Use get to provide a default value if the key is not present
+        "1"
     )
     print(room['itemId'])
     cursor.execute(item_query, item_data)
 
     price_query = """
-    INSERT INTO price (itemId, deposit, rent)
+    INSERT IGNORE INTO price (itemId, deposit, rent)
     VALUES (%s, %s, %s)
     """
     price_data = (
@@ -65,7 +74,7 @@ for room in rooms:
     cursor.execute(price_query, price_data)
 
     room_query = """
-    INSERT INTO room (itemId, roomType, title, roomDirection, directionCriterion)
+    INSERT IGNORE INTO room (itemId, roomType, title, roomDirection, directionCriterion)
     VALUES (%s, %s, %s, %s, %s)
     """
     room_data = (
@@ -78,7 +87,7 @@ for room in rooms:
     cursor.execute(room_query, room_data)
 
     location_query = """
-    INSERT INTO location (itemId, lat, lng)
+    INSERT IGNORE INTO location (itemId, lat, lng)
     VALUES (%s, %s, %s)
     """
 
@@ -91,7 +100,7 @@ for room in rooms:
     cursor.execute(location_query, location_data)
 
     parking_query = """
-    INSERT INTO parking (itemId, parkingAvailableText, parkingCountText)
+    INSERT IGNORE INTO parking (itemId, parkingAvailableText, parkingCountText)
     VALUES (%s, %s, %s)
     """
 
@@ -104,7 +113,7 @@ for room in rooms:
     cursor.execute(parking_query, parking_data)
 
     options_query = """
-    INSERT INTO options (itemId, inoption)
+    INSERT IGNORE INTO options (itemId, inoption)
     VALUES (%s, %s)
     """
     for option in room['options']:
@@ -113,7 +122,7 @@ for room in rooms:
     
     # Assuming images is a list of image URLs in each room
     images_query = """
-    INSERT INTO image (itemId, imageUrl)
+    INSERT IGNORE INTO image (itemId, imageUrl)
     VALUES (%s, %s)
     """
     for index, image_url in enumerate(room['images']):
@@ -121,7 +130,7 @@ for room in rooms:
         cursor.execute(images_query, image_data)
 
     floor_query = """
-    INSERT INTO floor (itemId, allFloors, floor)
+    INSERT IGNORE INTO floor (itemId, allFloors, floor)
     VALUES (%s, %s, %s)
     """
 
@@ -134,7 +143,7 @@ for room in rooms:
     cursor.execute(floor_query, floor_data)
     
     area_query = """
-    INSERT INTO area (itemId, 전용면적M2)
+    INSERT IGNORE INTO area (itemId, 전용면적M2)
     VALUES (%s, %s)
     """
 
