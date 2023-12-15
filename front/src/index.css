@@ -35,7 +35,7 @@ body, html {
     display: flex;
     flex-direction: row;
     width : 100vw;
-    height : 100vh;
+
 }
 .map{
     flex: 1;
@@ -121,7 +121,6 @@ body, html {
     font-size: 20px;
     color: var(--primary-color);
     color: white;
-    margin: 8px;
 }
 .initial-nav{
     position: fixed;
@@ -210,4 +209,70 @@ body, html {
     font-size: 60px;
     margin: 48px;
     padding: 0;
+}
+
+/* Add Room */
+#add {
+    display: grid;
+    width: 100vw;
+    grid-template-columns: 70% 30%;
+  }
+  
+  .add-content {
+    background-color: #2b6653;
+    padding: 32px;
+  }
+  
+  .add-map {
+    background-color: #2bFF53;
+  }
+  
+  .title-area {
+    width: 100%;
+    margin-top: 0px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+  }
+  
+  .input-area {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 12px;
+    background-color: aliceblue;
+    padding: 12px;
+  }
+  
+  .add-area {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .add-title {
+    font-size: 1.2em;
+    padding: 8px;
+  }
+  
+  .add-input {
+    padding: 4px;
+  }
+
+ #title2 {
+  grid-column: span 2; /* Each item spans two columns */
+}
+
+.add-map-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.add-map {
+    border-radius: 48px; /* 원하는 반지름으로 설정 */
+    overflow: hidden; /* 모서리를 둥글게 만들기 위해 overflow 속성을 추가 */
+    width: 90%;
+    height: 80%;
 }

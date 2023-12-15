@@ -4,7 +4,7 @@ import Navi from './Nav';
 
 const Layout = ({ children }) => {
   return (
-    <div>
+    <div className="layout">
       <Navi />
       {children}
     </div>
