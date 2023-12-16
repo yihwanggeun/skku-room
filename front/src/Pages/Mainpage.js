@@ -2,61 +2,72 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import SidebarItem from "../\bComponent/SidebarItem";
 import ItemDetail from "../\bComponent/ItemDetail";
+
+/**
+ * Mainpage Component
+ * Displays a map with markers, and a sidebar with item details.
+ */
 function Mainpage() {
+    // State variables
     const [map, setMap] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [markers, setMarkers] = useState([]);
+    const [itemDetails, setItemDetails] = useState([]);
+
+    // Map options
     const mapOption = {
         center: new window.kakao.maps.LatLng(37.300349, 126.97075),
         level: 3,
     };
+
+    // Marker image and size
     const markerImage = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png"; 
     const imageSize = new window.kakao.maps.Size(24, 35); 
-    const [markers, setMarkers] = useState([]);
-    const [itemDetails, setItemDetails] = useState([]);
-    var cluster = new window.kakao.maps.MarkerClusterer({
+
+    // Marker cluster settings
+    const cluster = new window.kakao.maps.MarkerClusterer({
         map: map,
         minLevel: 3,
-        averageCenter: true, // 필요에 따라 설정
-        disableClickZoom : true,
-        styles:[{
-            width : '50px', height : '50px',
+        averageCenter: true,
+        disableClickZoom: true,
+        styles: [{
+            width: '50px',
+            height: '50px',
             borderRadius: '30px',
             color: '#FFF',
-            textAlign : 'center',
+            textAlign: 'center',
             fontWeight: 'bold',
-            background : 'rgba(43, 102, 83, .8)',
+            background: 'rgba(43, 102, 83, .8)',
             lineHeight: '50px'
         }]
     });
 
+    // useEffect to initialize the map and fetch marker data
     useEffect(() => {
         const mapContainer = document.getElementsByClassName('map')[0];
-        console.log("width");
-        console.log(mapContainer.style.width);
         const newMap = new window.kakao.maps.Map(mapContainer, mapOption);
         setMap(newMap);
 
         axios.get('http://localhost:3030')
             .then(response => {
                 const locations = response.data;
-                console.log(locations)
                 setMarkers(locations);
             })
             .catch(error => {
                 console.error('Error fetching location data');
             });
-        
-        // 컴포넌트 언마운트 시 지도 리소스 정리
+
+        // Cleanup resources on component unmount
         return () => {
-            
+            // Perform cleanup if needed
         };
     }, []);
 
+    // useEffect to update markers on the map
     useEffect(() => {
-        // 마커를 추가하는 부분
         if (map && markers.length > 0) {
-            var markerList = markers.map(location => {
+            const markerList = markers.map(location => {
                 const marker = new window.kakao.maps.Marker({
                     map: map,
                     position: new window.kakao.maps.LatLng(location.lat, location.lng),
@@ -64,47 +75,52 @@ function Mainpage() {
                     image: new window.kakao.maps.MarkerImage(markerImage, imageSize),
                 });
                 marker.itemId = location.itemId;
-                return marker
+                return marker;
             });
-            
+
             cluster.addMarkers(markerList);
         }
     }, [map, markers]);
 
-    window.kakao.maps.event.addListener(cluster, 'clusterclick', function(clusterPoint){
-        var makrersInCluster = clusterPoint.getMarkers();
-        var clickedMarkers = []
-        makrersInCluster.forEach(marker =>{
-            clickedMarkers.push(marker.itemId);
-        });
+    // Event listener for cluster click
+    window.kakao.maps.event.addListener(cluster, 'clusterclick', function (clusterPoint) {
+        const markersInCluster = clusterPoint.getMarkers();
+        const clickedMarkers = markersInCluster.map(marker => marker.itemId);
 
-        axios.get('http://localhost:3030/getItemDetails',{params : {itemIds: clickedMarkers}})
-        .then(response => {
-            //console.log(response.data);
-            setItemDetails(response.data);
-            setIsSidebarOpen(true);
-            map.panTo(new window.kakao.maps.LatLng(response.data[0].lat, response.data[0].lng))
-        })
-        .catch(error => {
-            console.error('Error fetching data', error);
-        });
+        axios.get('http://localhost:3030/getItemDetails', { params: { itemIds: clickedMarkers } })
+            .then(response => {
+                setItemDetails(response.data);
+                setIsSidebarOpen(true);
+                map.panTo(new window.kakao.maps.LatLng(response.data[0].lat, response.data[0].lng));
+            })
+            .catch(error => {
+                console.error('Error fetching data', error);
+            });
     });
 
+    // Event handler for item click
     const handleItemClick = (selectedItemId) => {
-        const selectedItem = selectedItemId;
-        setSelectedItem(selectedItem);
-        console.log(selectedItem);
+        setSelectedItem(selectedItemId);
     };
+
+    // Event handler for back button click
+    const handleBackButtonClick = () => {
+        setSelectedItem(null);
+    };
+
     return (
-        
         <div className="main-wrapper">
             <div className="map"></div>
             {isSidebarOpen && (
-            <div className="sidebar">
-                {selectedItem ? (
+                <div className="sidebar">
+                    {selectedItem ? (
+                        // Render selected item details
                         <div>
-                            <h2>Selected Item Details</h2>
-                            <ItemDetail selectedItemId={selectedItem} />
+                            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                                <button style={{ border: '0px', backgroundColor: 'transparent', width: '24px' }} onClick={handleBackButtonClick}>&lt;</button>
+                                <h2 style={{ flex: 1, marginLeft: 'auto', marginRight: '0px' }}>Selected Item Details</h2>
+                            </div>
+                            <ItemDetail selectedItemId={selectedItem} onBackButtonClick={handleBackButtonClick} />
                         </div>
                     ) : (
                         // Render the list of items
@@ -119,9 +135,8 @@ function Mainpage() {
                             ))}
                         </div>
                     )}
-            </div>
-            )
-                }
+                </div>
+            )}
         </div>
     );
 }
